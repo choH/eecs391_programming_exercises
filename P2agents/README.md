@@ -6,11 +6,17 @@
 
 Add the selection of direction for every step with the update of f value. Using maze_16x16_config.xml as the map.
 
+### Heuristic
+
+Update to support pythagorean theorem as heuristic.
+
+
 ### Problems:
 
-Cannot prevent selecting blocked locations (with trees): 
+Cannot prevent selecting blocked locations (with trees):
 
 ` marked.contains(current) == false &&resourceLocations.contains(current) == false `  cannot work.
 
 The whole agent cannot process since the replan code hasn't been completed.
 
+Will debug this before the final commit.
