@@ -304,6 +304,7 @@ public class AstarAgent extends Agent {
      * @param resourceLocations Set of positions occupied by resources
      * @return Stack of positions with top of stack being first move in plan
      */
+        double pythagorean = Math.sqrt(Math.pow(Math.abs(x - goal_x), 2) + Math.pow(Math.abs(y - goal_y), 2));
     public boolean is_valid_location(MapLocation next, int xExtent, int yExtent, Set<MapLocation> resourceLocations) {
         boolean flag = (next.x < 0) || (next.y < 0) || (next.x >= xExtent) || (next.y >= yExtent);
         if (resourceLocations.contains(next)){
