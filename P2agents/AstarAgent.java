@@ -12,6 +12,7 @@ import edu.cwru.sepia.util.Direction;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
+import java.lang.Math;
 
 public class AstarAgent extends Agent {
 
@@ -23,7 +24,7 @@ public class AstarAgent extends Agent {
         {
             this.x = x;
             this.y = y;
-        }    
+        }
     }
 
     Stack<MapLocation> path;
@@ -205,10 +206,10 @@ public class AstarAgent extends Agent {
      * This method should return true when the path needs to be replanned
      * and false otherwise. This will be necessary on the dynamic map where the
      * footman will move to block your unit.
-     * 
+     *
      * You can check the position of the enemy footman with the following code:
      * state.getUnit(enemyFootmanID).getXPosition() or .getYPosition().
-     * 
+     *
      * There are more examples of getting the positions of objects in SEPIA in the findPath method.
      *
      * @param state
@@ -260,7 +261,7 @@ public class AstarAgent extends Agent {
      * will use the A* algorithm to compute the optimum path from the start position to
      * a position adjacent to the goal position.
      *
-     * Therefore your you need to find some possible adjacent steps which are in range 
+     * Therefore your you need to find some possible adjacent steps which are in range
      * and are not trees or the enemy footman.
      * Hint: Set<MapLocation> resourceLocations contains the locations of trees
      *
@@ -304,7 +305,13 @@ public class AstarAgent extends Agent {
      * @param resourceLocations Set of positions occupied by resources
      * @return Stack of positions with top of stack being first move in plan
      */
+
+    private double herustic(int x, int y, int goal_x, int goal_y) {
         double pythagorean = Math.sqrt(Math.pow(Math.abs(x - goal_x), 2) + Math.pow(Math.abs(y - goal_y), 2));
+
+        return pythagorean;
+    }
+
     public boolean is_valid_location(MapLocation next, int xExtent, int yExtent, Set<MapLocation> resourceLocations) {
         boolean flag = (next.x < 0) || (next.y < 0) || (next.x >= xExtent) || (next.y >= yExtent);
         if (resourceLocations.contains(next)){
@@ -319,12 +326,12 @@ public class AstarAgent extends Agent {
         Stack<MapLocation> stack = new Stack<MapLocation>();
         Stack<MapLocation> result = new Stack<MapLocation>();
         Stack<MapLocation> marked = new Stack<MapLocation>();
-        //is valid: x <= xExtent && x >= 0 && y <= yExtent && y >= 0 
+        //is valid: x <= xExtent && x >= 0 && y <= yExtent && y >= 0
         //is goal: x == goal.x && y == goal.y
         //is unblocked: resourceLocations.contains(MapLocation(x,y,null,0) == false)
         //current.g = previous.g + distance from current to previous
-        //current.h = max{abs(x – goal.x),abs(y – goal.y)} 
-        
+        //current.h = max{abs(x – goal.x),abs(y – goal.y)}
+
         int x = 0;
         int y = 0;
         double g = 0;
@@ -333,11 +340,11 @@ public class AstarAgent extends Agent {
         	if (stack.isEmpty() == true) {
         		stack.push(start);
         	}
-        	
+
         		x = stack.firstElement().x;
         		y = stack.firstElement().y;
-        	
-        	
+
+
         	//1: West
         	if (x - 1 <= xExtent && x - 1>= 0 && y <= yExtent && y >= 0) {
         		MapLocation current = new MapLocation(x - 1, y, null, 0);
@@ -346,7 +353,7 @@ public class AstarAgent extends Agent {
         			break;
         		}
         		else if (marked.contains(current) == false && resourceLocations.contains(current) == false) {
-        			double fnew = g + 1 +  Math.max(Math.abs(x - 1 - goal.x),Math.abs(y - goal.y));
+        			double fnew = g +  this.herustic(x, y, goal.x, goal.y);
         			if (fnew <= f) {
         				f = fnew;
         				stack.pop();
@@ -355,7 +362,7 @@ public class AstarAgent extends Agent {
         			marked.push(current);
         		}
         	}
-        	
+
         	//2: East
         	if (x + 1 <= xExtent && x + 1 >= 0 && y <= yExtent && y >= 0) {
         		MapLocation current = new MapLocation(x + 1, y, null, 0);
@@ -364,7 +371,7 @@ public class AstarAgent extends Agent {
         			break;
         		}
         		else if (marked.contains(current) == false && resourceLocations.contains(current) == false) {
-        			double fnew = g + 1 +  Math.max(Math.abs(x + 1 - goal.x),Math.abs(y - goal.y));
+        			double fnew = g + this.herustic(x, y, goal.x, goal.y);
         			if (fnew <= f) {
         				f = fnew;
         				stack.pop();
@@ -373,7 +380,7 @@ public class AstarAgent extends Agent {
         			marked.push(current);
         		}
         	}
-        	
+
         	//3: South
         	if (x <= xExtent && x >= 0 && y + 1 <= yExtent && y + 1 >= 0) {
         		MapLocation current = new MapLocation(x, y + 1, null, 0);
@@ -382,8 +389,8 @@ public class AstarAgent extends Agent {
         			break;
         		}
         		else if (marked.contains(current) == false && resourceLocations.contains(current) == false) {
-        			double fnew = g + 1 +  Math.max(Math.abs(x - goal.x),Math.abs(y + 1 - goal.y));
-        			if (fnew <= f) {
+        			double fnew = g + this.herustic(x, y, goal.x, goal.y);
+        			if (fnew < f) {
         				f = fnew;
         				stack.pop();
         				stack.push(current);
@@ -391,7 +398,7 @@ public class AstarAgent extends Agent {
         			marked.push(current);
         		}
         	}
-        	
+
         	//4: North
         	if (x <= xExtent && x >= 0 && y - 1 <= yExtent && y - 1 >= 0) {
         		MapLocation current = new MapLocation(x, y - 1, null, 0);
@@ -400,8 +407,8 @@ public class AstarAgent extends Agent {
         			break;
         		}
         		else if (marked.contains(current) == false && resourceLocations.contains(current) == false) {
-        			double fnew = g + 1 +  Math.max(Math.abs(x - goal.x),Math.abs(y - 1 - goal.y));
-        			if (fnew <= f) {
+        			double fnew = g + this.herustic(x, y, goal.x, goal.y);
+        			if (fnew < f) {
         				f = fnew;
         				stack.pop();
         				stack.push(current);
@@ -409,7 +416,7 @@ public class AstarAgent extends Agent {
         			marked.push(current);
         		}
         	}
-        	
+
         	//5: South-West
         	if (x - 1 <= xExtent && x - 1 >= 0 && y + 1 <= yExtent && y + 1 >= 0) {
         		MapLocation current = new MapLocation(x - 1, y + 1, null, 0);
@@ -418,8 +425,8 @@ public class AstarAgent extends Agent {
         			break;
         		}
         		else if (marked.contains(current) == false && resourceLocations.contains(current) == false) {
-        			double fnew = g + Math.sqrt(2) +  Math.max(Math.abs(x - 1 - goal.x),Math.abs(y + 1 - goal.y));
-        			if (fnew <= f) {
+        			double fnew = g + this.herustic(x, y, goal.x, goal.y);
+        			if (fnew < f) {
         				f = fnew;
         				stack.pop();
         				stack.push(current);
@@ -427,7 +434,7 @@ public class AstarAgent extends Agent {
         			marked.push(current);
         		}
         	}
-        	
+
         	//6: North-West
         	if (x - 1 <= xExtent && x - 1 >= 0 && y - 1 <= yExtent && y - 1 >= 0) {
         		MapLocation current = new MapLocation(x - 1, y + 1, null, 0);
@@ -436,8 +443,8 @@ public class AstarAgent extends Agent {
         			break;
         		}
         		else if (marked.contains(current) == false && resourceLocations.contains(current) == false) {
-        			double fnew = g + Math.sqrt(2) +  Math.max(Math.abs(x - 1 - goal.x),Math.abs(y - 1 - goal.y));
-        			if (fnew <= f) {
+        			double fnew = g +  this.herustic(x, y, goal.x, goal.y);
+        			if (fnew < f) {
         				f = fnew;
         				stack.pop();
         				stack.push(current);
@@ -445,7 +452,7 @@ public class AstarAgent extends Agent {
         			marked.push(current);
         		}
         	}
-        	
+
         	//7: South-East
         	if (x + 1 <= xExtent && x + 1 >= 0 && y + 1 <= yExtent && y + 1 >= 0) {
         		MapLocation current = new MapLocation(x + 1, y + 1, null, 0);
@@ -454,8 +461,8 @@ public class AstarAgent extends Agent {
         			break;
         		}
         		else if (marked.contains(current) == false && resourceLocations.contains(current) == false) {
-        			double fnew = g + Math.sqrt(2) +  Math.max(Math.abs(x + 1 - goal.x),Math.abs(y + 1 - goal.y));
-        			if (fnew <= f) {
+        			double fnew = g + this.herustic(x, y, goal.x, goal.y);
+        			if (fnew < f) {
         				f = fnew;
         				stack.pop();
         				stack.push(current);
@@ -463,7 +470,7 @@ public class AstarAgent extends Agent {
         			marked.push(current);
         		}
         	}
-        	
+
         	//8: North-East
         	if (x + 1 <= xExtent && x + 1 >= 0 && y - 1 <= yExtent && y - 1 >= 0) {
         		MapLocation current = new MapLocation(x + 1, y - 1, null, 0);
@@ -472,8 +479,8 @@ public class AstarAgent extends Agent {
         			break;
         		}
         		else if (marked.contains(current) == false && resourceLocations.contains(current) == false) {
-        			double fnew = g + Math.sqrt(2) +  Math.max(Math.abs(x + 1 - goal.x),Math.abs(y - 1 - goal.y));
-        			if (fnew <= f) {
+                    double fnew = g + this.herustic(x, y, goal.x, goal.y);
+        			if (fnew < f) {
         				f = fnew;
         				stack.pop();
         				stack.push(current);
@@ -481,12 +488,12 @@ public class AstarAgent extends Agent {
         			marked.push(current);
         		}
         	}
-        	
+
         	g = g + Math.sqrt((stack.firstElement().x - x) * (stack.firstElement().x - x) + (stack.firstElement().y - y) * (stack.firstElement().y - y));
         	result.push(stack.firstElement());
-        	
+
         }while(stack.isEmpty() != true);
-        
+
         return result;
     }
 
