@@ -304,6 +304,15 @@ public class AstarAgent extends Agent {
      * @param resourceLocations Set of positions occupied by resources
      * @return Stack of positions with top of stack being first move in plan
      */
+    public boolean is_valid_location(MapLocation next, int xExtent, int yExtent, Set<MapLocation> resourceLocations) {
+        boolean flag = (next.x < 0) || (next.y < 0) || (next.x >= xExtent) || (next.y >= yExtent);
+        if (resourceLocations.contains(next)){
+           return false;
+        }
+        return !flag;
+   }
+
+
     private Stack<MapLocation> AstarSearch(MapLocation start, MapLocation goal, int xExtent, int yExtent, MapLocation enemyFootmanLoc, Set<MapLocation> resourceLocations)
     {
         Stack<MapLocation> stack = new Stack<MapLocation>();
