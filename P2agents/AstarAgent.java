@@ -1,31 +1,29 @@
-package eecs_391_sepia_example;
+package astar;
+
+// Shaochen (Henry) ZHONG and Shiqi (Cathy) Li.
 
 import edu.cwru.sepia.action.Action;
 import edu.cwru.sepia.agent.Agent;
 import edu.cwru.sepia.environment.model.history.History;
-import edu.cwru.sepia.environment.model.state.ResourceNode;
-import edu.cwru.sepia.environment.model.state.State;
-import edu.cwru.sepia.environment.model.state.Unit;
-import edu.cwru.sepia.environment.model.state.Unit.UnitView;
+import edu.cwru.sepia.environment.model.state.*;
 import edu.cwru.sepia.util.Direction;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.*;
-import java.lang.Math;
 
 public class AstarAgent extends Agent {
 
-    class MapLocation
-    {
-        public int x, y;
+    class MapLocation {
+		public int x, y;
+		public MapLocation cameFrom;
+		public float cost;
 
-        public MapLocation(int x, int y, MapLocation cameFrom, float cost)
-        {
-            this.x = x;
-            this.y = y;
-        }
-    }
+
+		public MapLocation(int x, int y, MapLocation cameFrom, float cost) {
+			this.x = x;
+			this.y = y;
+		}
+	}
 
     Stack<MapLocation> path;
     int footmanID, townhallID, enemyFootmanID;
@@ -496,6 +494,28 @@ public class AstarAgent extends Agent {
 
         return result;
     }
+
+    private boolean is_movable(MapLocation tar_pos, MapLocation enemy_pos, boolean[][] resource_LUT) {
+		return (tar_pos != enemy_pos) && (!resource_LUT[tar_pos.x][tar_pos.y]);
+	}
+
+    private boolean is_pos_valid(MapLocation tar_pos, int xExtent, int yExtent) {
+		return (tar_pos.x >= 0 && tar_pos.x <= xExtent) && (tar_pos.y >= 0 && tar_pos.y <= yExtent);
+	}
+
+    private boolean is_same_pos(MapLocation src, MapLocation dest) {
+		return (src.x == dest.x) && (src.y == dest.y);
+	}
+
+    private float heuristic(MapLocation current_pos, MapLocation goal) {
+		if (Math.abs(goal.x - current_pos.x) > Math.abs(goal.y - current_pos.y)) {
+            return (float) Math.abs(goal.x - current_pos.x);
+        }
+        return (float) Math.abs(goal.y - current_pos.y);
+	}
+
+
+
 
     /**
      * Primitive actions take a direction (e.g. Direction.NORTH, Direction.NORTHEAST, etc)
