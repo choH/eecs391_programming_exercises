@@ -324,195 +324,79 @@ public class AstarAgent extends Agent {
      * @return Stack of positions with top of stack being first move in plan
      */
 
-    private double herustic(int x, int y, int goal_x, int goal_y) {
-        double pythagorean = Math.sqrt(Math.pow(Math.abs(x - goal_x), 2) + Math.pow(Math.abs(y - goal_y), 2));
+    private Stack<MapLocation> AstarSearch(MapLocation start, MapLocation goal, int xExtent, int yExtent, MapLocation enemyFootmanLoc, Set<MapLocation> resourceLocations) {
 
-        return pythagorean;
-    }
 
-    public boolean is_valid_location(MapLocation next, int xExtent, int yExtent, Set<MapLocation> resourceLocations) {
-        boolean flag = (next.x < 0) || (next.y < 0) || (next.x >= xExtent) || (next.y >= yExtent);
-        if (resourceLocations.contains(next)){
-           return false;
+        boolean goal_found_flag = false;
+        MapLocation current_pos = start; // changing variavle regarding the current pos of the footman.
+
+        // Data structure to check if will colloid to resources when moving.
+        boolean[][] resource_LUT = new boolean[xExtent][yExtent];
+        for (MapLocation a_resource_location : resourceLocations) {
+            resource_LUT[a_resource_location.x][a_resource_location.y] = true;
         }
-        return !flag;
-   }
 
+        // two list of A* search
+        Stack<MapLocation> open_list = new Stack<MapLocation>();
+        Stack<MapLocation> closed_list = new Stack<MapLocation>();
+        // Optimal path registered in here
+        Stack<MapLocation> goal_path = new Stack<MapLocation>();
 
-    private Stack<MapLocation> AstarSearch(MapLocation start, MapLocation goal, int xExtent, int yExtent, MapLocation enemyFootmanLoc, Set<MapLocation> resourceLocations)
-    {
-        Stack<MapLocation> stack = new Stack<MapLocation>();
-        Stack<MapLocation> result = new Stack<MapLocation>();
-        Stack<MapLocation> marked = new Stack<MapLocation>();
-        //is valid: x <= xExtent && x >= 0 && y <= yExtent && y >= 0
-        //is goal: x == goal.x && y == goal.y
-        //is unblocked: resourceLocations.contains(MapLocation(x,y,null,0) == false)
-        //current.g = previous.g + distance from current to previous
-        //current.h = max{abs(x – goal.x),abs(y – goal.y)}
-
-        int x = 0;
-        int y = 0;
-        double g = 0;
-        double f = Math.max(Math.abs(start.x - goal.x),Math.abs(start.y - goal.y));;
+        // beging exploration.
+        open_list.add(start);
         do {
-        	if (stack.isEmpty() == true) {
-        		stack.push(start);
-        	}
+            // get current position
+            closed_list.add(open_list.pop());
+            // list possible s'
+            MapLocation[] action_list = new MapLocation[8];
+            action_list[0] = new MapLocation(current_pos.x - 1, current_pos.y + 1, current_pos, 0);
+            action_list[1] = new MapLocation(current_pos.x, current_pos.y + 1, current_pos, 0);
+            action_list[2] = new MapLocation(current_pos.x + 1, current_pos.y + 1, current_pos, 0);
+            action_list[3] = new MapLocation(current_pos.x - 1, current_pos.y, current_pos, 0);
+            action_list[4] = new MapLocation(current_pos.x + 1, current_pos.y, current_pos, 0);
+            action_list[5] = new MapLocation(current_pos.x - 1, current_pos.y - 1, current_pos, 0);
+            action_list[6] = new MapLocation(current_pos.x, current_pos.y - 1, current_pos, 0);
+            action_list[7] = new MapLocation(current_pos.x + 1, current_pos.y - 1, current_pos, 0);
 
-        		x = stack.firstElement().x;
-        		y = stack.firstElement().y;
+            // best function value holder
+            float min_herustic = Float.MAX_VALUE;
+            // holder for best s'
+            MapLocation min_herustic_action = action_list[0];
+            for (MapLocation an_action : action_list) {
+                // check if s' is legal
+                if (is_pos_valid(an_action, xExtent, yExtent) && is_movable(an_action, enemyFootmanLoc, resource_LUT)) {
+                    if (!closed_list.contains(an_action)) { // check if s' is explored
+                        open_list.add(an_action);
+                        float action_herustic = heuristic(an_action, goal);
+                        an_action.cost = action_herustic;
+                        if (action_herustic < min_herustic) { // update best s' and best s' function value
+                            min_herustic = action_herustic;
+                            min_herustic_action = an_action;
+                        }
+                        closed_list.add(an_action); // finish evaluation, add to close list.
+                    }
+                }
+            }
 
+            ///
+            open_list.clear();
+            open_list.add(min_herustic_action); // make best s' into open list
+            current_pos = min_herustic_action; // move to best s'
 
-        	//1: West
-        	if (x - 1 <= xExtent && x - 1>= 0 && y <= yExtent && y >= 0) {
-        		MapLocation current = new MapLocation(x - 1, y, null, 0);
-        		if (x - 1 == goal.x && y == goal.y) {
-        			stack.push(current);
-        			break;
-        		}
-        		else if (marked.contains(current) == false && resourceLocations.contains(current) == false) {
-        			double fnew = g +  this.herustic(x, y, goal.x, goal.y);
-        			if (fnew <= f) {
-        				f = fnew;
-        				stack.pop();
-        				stack.push(current);
-        			}
-        			marked.push(current);
-        		}
-        	}
+            if (is_same_pos(min_herustic_action, goal)) {
+                goal_found_flag = true;
+            }
+            else {
+                goal_path.add(min_herustic_action); // register best s' if goal is not found yet.
+            }
+        } while (!goal_found_flag && !open_list.isEmpty());
 
-        	//2: East
-        	if (x + 1 <= xExtent && x + 1 >= 0 && y <= yExtent && y >= 0) {
-        		MapLocation current = new MapLocation(x + 1, y, null, 0);
-        		if (x + 1 == goal.x && y == goal.y) {
-        			stack.push(current);
-        			break;
-        		}
-        		else if (marked.contains(current) == false && resourceLocations.contains(current) == false) {
-        			double fnew = g + this.herustic(x, y, goal.x, goal.y);
-        			if (fnew <= f) {
-        				f = fnew;
-        				stack.pop();
-        				stack.push(current);
-        			}
-        			marked.push(current);
-        		}
-        	}
-
-        	//3: South
-        	if (x <= xExtent && x >= 0 && y + 1 <= yExtent && y + 1 >= 0) {
-        		MapLocation current = new MapLocation(x, y + 1, null, 0);
-        		if (x == goal.x && y + 1 == goal.y) {
-        			stack.push(current);
-        			break;
-        		}
-        		else if (marked.contains(current) == false && resourceLocations.contains(current) == false) {
-        			double fnew = g + this.herustic(x, y, goal.x, goal.y);
-        			if (fnew < f) {
-        				f = fnew;
-        				stack.pop();
-        				stack.push(current);
-        			}
-        			marked.push(current);
-        		}
-        	}
-
-        	//4: North
-        	if (x <= xExtent && x >= 0 && y - 1 <= yExtent && y - 1 >= 0) {
-        		MapLocation current = new MapLocation(x, y - 1, null, 0);
-        		if (x == goal.x && y - 1 == goal.y) {
-        			stack.push(current);
-        			break;
-        		}
-        		else if (marked.contains(current) == false && resourceLocations.contains(current) == false) {
-        			double fnew = g + this.herustic(x, y, goal.x, goal.y);
-        			if (fnew < f) {
-        				f = fnew;
-        				stack.pop();
-        				stack.push(current);
-        			}
-        			marked.push(current);
-        		}
-        	}
-
-        	//5: South-West
-        	if (x - 1 <= xExtent && x - 1 >= 0 && y + 1 <= yExtent && y + 1 >= 0) {
-        		MapLocation current = new MapLocation(x - 1, y + 1, null, 0);
-        		if (x - 1 == goal.x && y + 1 == goal.y) {
-        			stack.push(current);
-        			break;
-        		}
-        		else if (marked.contains(current) == false && resourceLocations.contains(current) == false) {
-        			double fnew = g + this.herustic(x, y, goal.x, goal.y);
-        			if (fnew < f) {
-        				f = fnew;
-        				stack.pop();
-        				stack.push(current);
-        			}
-        			marked.push(current);
-        		}
-        	}
-
-        	//6: North-West
-        	if (x - 1 <= xExtent && x - 1 >= 0 && y - 1 <= yExtent && y - 1 >= 0) {
-        		MapLocation current = new MapLocation(x - 1, y + 1, null, 0);
-        		if (x - 1 == goal.x && y - 1 == goal.y) {
-        			stack.push(current);
-        			break;
-        		}
-        		else if (marked.contains(current) == false && resourceLocations.contains(current) == false) {
-        			double fnew = g +  this.herustic(x, y, goal.x, goal.y);
-        			if (fnew < f) {
-        				f = fnew;
-        				stack.pop();
-        				stack.push(current);
-        			}
-        			marked.push(current);
-        		}
-        	}
-
-        	//7: South-East
-        	if (x + 1 <= xExtent && x + 1 >= 0 && y + 1 <= yExtent && y + 1 >= 0) {
-        		MapLocation current = new MapLocation(x + 1, y + 1, null, 0);
-        		if (x + 1 == goal.x && y + 1 == goal.y) {
-        			stack.push(current);
-        			break;
-        		}
-        		else if (marked.contains(current) == false && resourceLocations.contains(current) == false) {
-        			double fnew = g + this.herustic(x, y, goal.x, goal.y);
-        			if (fnew < f) {
-        				f = fnew;
-        				stack.pop();
-        				stack.push(current);
-        			}
-        			marked.push(current);
-        		}
-        	}
-
-        	//8: North-East
-        	if (x + 1 <= xExtent && x + 1 >= 0 && y - 1 <= yExtent && y - 1 >= 0) {
-        		MapLocation current = new MapLocation(x + 1, y - 1, null, 0);
-        		if (x + 1 == goal.x && y - 1 == goal.y) {
-        			stack.push(current);
-        			break;
-        		}
-        		else if (marked.contains(current) == false && resourceLocations.contains(current) == false) {
-                    double fnew = g + this.herustic(x, y, goal.x, goal.y);
-        			if (fnew < f) {
-        				f = fnew;
-        				stack.pop();
-        				stack.push(current);
-        			}
-        			marked.push(current);
-        		}
-        	}
-
-        	g = g + Math.sqrt((stack.firstElement().x - x) * (stack.firstElement().x - x) + (stack.firstElement().y - y) * (stack.firstElement().y - y));
-        	result.push(stack.firstElement());
-
-        }while(stack.isEmpty() != true);
-
-        return result;
+        ///
+        Stack<MapLocation> result = new Stack<MapLocation>();
+		while (!goal_path.isEmpty()) {
+			result.push(goal_path.pop());
+		}
+		return result; // output optimal past as required.
     }
 
     private boolean is_movable(MapLocation tar_pos, MapLocation enemy_pos, boolean[][] resource_LUT) {
@@ -586,3 +470,5 @@ public class AstarAgent extends Agent {
         return null;
     }
 }
+
+
