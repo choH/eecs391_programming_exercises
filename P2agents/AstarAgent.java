@@ -215,8 +215,28 @@ public class AstarAgent extends Agent {
      * @param currentPath
      * @return
      */
-    private boolean shouldReplanPath(State.StateView state, History.HistoryView history, Stack<MapLocation> currentPath)
-    {
+    private boolean shouldReplanPath(State.StateView state, History.HistoryView history, Stack<MapLocation> currentPath) {
+        Unit.UnitView enemy_footman_unit = state.getUnit(enemyFootmanID);
+        if (currentPath.size() < 4) {
+            return false;
+        }
+        if(enemy_footman_unit != null) {
+
+            // retrive position of enemy
+            int enemy_x_pos = enemy_footman_unit.getXPosition();
+            int enemy_y_pos = enemy_footman_unit.getYPosition();
+
+            // retrive position of our footman
+			Unit.UnitView footman_unit = state.getUnit(footmanID);
+            int footman_x_pos = footman_unit.getXPosition();
+            int footman_y_pos = footman_unit.getYPosition();
+
+            // check if enemy is among 3 blocks to our foot man, if so, the agent shall replan.
+			for (int i = footman_x_pos - 3; i <= footman_y_pos + 3; i++)
+				for (int j = footman_y_pos - 3; j <= footman_x_pos + 3; j++)
+    				if (enemy_x_pos == i && enemy_y_pos == j)
+    					return true;
+		}
         return false;
     }
 
