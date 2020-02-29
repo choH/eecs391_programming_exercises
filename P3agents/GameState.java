@@ -36,19 +36,19 @@ public class GameState {
      *
      * For a given ResourceView you can query the position using
      * resource.getXPosition() and resource.getYPosition()
-     * 
+     *
      * You can get a list of all the units belonging to a player with the following command:
      * state.getUnitIds(int playerNum): gives a list of all unit IDs beloning to the player.
      * You control player 0, the enemy controls player 1.
-     * 
+     *
      * In order to see information about a specific unit, you must first get the UnitView
      * corresponding to that unit.
      * state.getUnit(int id): gives the UnitView for a specific unit
-     * 
+     *
      * With a UnitView you can find information about a given unit
      * unitView.getXPosition() and unitView.getYPosition(): get the current location of this unit
      * unitView.getHP(): get the current health of this unit
-     * 
+     *
      * SEPIA stores information about unit types inside TemplateView objects.
      * For a given unit type you will need to find statistics from its Template View.
      * unitView.getTemplateView().getRange(): This gives you the attack range
@@ -65,16 +65,16 @@ public class GameState {
 	private List<UnitView> unit;
 	private List<UnitView> footman = new ArrayList<UnitView>();
 	private List<UnitView> archer = new ArrayList<UnitView>();
-	
+
     public GameState(State.StateView state) {
     	this.state = state;
-    	
+
     	xExtent = state.getXExtent();
     	yExtent = state.getYExtent();
-    	
+
     	resourcesID = state.getAllResourceIds();
     	resourcesNode = state.getAllResourceNodes();
-    	
+
     	unit = state.getAllUnits();
     	for(UnitView u : unit){
     		if (u.getID() == 1) {
@@ -114,17 +114,17 @@ public class GameState {
     			int ax = a.getXPosition();
     			int ay = a.getYPosition();
     			double distance = Math.sqrt((fx - ax)*(fx - ax)+(fy - ay)*(fy - ay));
-    			
+
     			minDistance = Math.min(minDistance, distance);
     		}
     	}
-    	
+
     	//max HP
     	int HP = 0;
     	for(UnitView f : footman) {
     		HP += f.getHP();
     	}
-    	
+
         return minDistance + HP;
     }
 
@@ -133,7 +133,7 @@ public class GameState {
      *
      * This will return a list of GameStateChild objects. You will generate all of the possible
      * actions in a step and then determine the resulting game state from that action. These are your GameStateChildren.
-     * 
+     *
      * It may be useful to be able to create a SEPIA Action. In this assignment you will
      * deal with movement and attacking actions. There are static methods inside the Action
      * class that allow you to create basic actions:
@@ -149,24 +149,44 @@ public class GameState {
      * To get the resulting position from a move in that direction you can do the following
      * x += direction.xComponent()
      * y += direction.yComponent()
-     * 
+     *
      * If you wish to explicitly use a Direction you can use the Direction enum, for example
      * Direction.NORTH or Direction.NORTHEAST.
-     * 
+     *
      * You can check many of the properties of an Action directly:
      * action.getType(): returns the ActionType of the action
      * action.getUnitID(): returns the ID of the unit performing the Action
-     * 
+     *
      * ActionType is an enum containing different types of actions. The methods given above
      * create actions of type ActionType.PRIMITIVEATTACK and ActionType.PRIMITIVEMOVE.
-     * 
+     *
      * For attack actions, you can check the unit that is being attacked. To do this, you
      * must cast the Action as a TargetedAction:
      * ((TargetedAction)action).getTargetID(): returns the ID of the unit being attacked
-     * 
+     *
      * @return All possible actions and their associated resulting game state
      */
     public List<GameStateChild> getChildren() {
-        return null;
+        // This method is still working in progress.
+
+        List<GameStateChild> child_list = new List<GameStateChild>();
+
+        List<PlayerUnit> child_units = this.archers;
+		Iterator<PlayerUnit> chid_unit_itor = child_units.iterator();
+
+        while (chid_unit_itor.hasNext()) {
+            // holder for possible moves.
+            List<GameStateChild> next_moves_pool = new LinkedList<GameStateChild>();
+
+            // Expand possible moves.
+            for (GameStateChild a_move : next_moves_pool) {
+				next_moves_pool.addAll(get_next_moves(a_move, child_units));
+			}
+        }
+
+
+        return child_list.
+    }
+
     }
 }
