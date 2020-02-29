@@ -77,10 +77,10 @@ public class MinimaxAlphaBeta extends Agent {
       if (depth == 0) {
     	  return node;
       }
-      
+
       GameState state = node.state;
       List<GameStateChild> children = state.getChildren();
-      
+
       if (depth % 2 == 0) {
     	  double max = Double.NEGATIVE_INFINITY;
     	  GameStateChild maxChild = node;
@@ -113,7 +113,7 @@ public class MinimaxAlphaBeta extends Agent {
     	  }
     	  return minChild;
       }
-        
+
     }
 
     /**
@@ -129,8 +129,13 @@ public class MinimaxAlphaBeta extends Agent {
      * @param children
      * @return The list of children sorted by your heuristic.
      */
-    public List<GameStateChild> orderChildrenWithHeuristics(List<GameStateChild> children)
-    {
-        return children;
+    public List<GameStateChild> orderChildrenWithHeuristics(List<GameStateChild> children) {
+        List<GameStateChild> ordered_list = new LinkedList<GameStateChild>(children);
+
+        // overwritten compare() method from comparator interface with shortcut.
+        Collections.sort(orderedList, new Comparator<GameStateChild>() {
+            public int compare(GameStateChild child_a, GameStateChild child_b) {
+                return child_a.state.getUtility().compareTo(child_b.state.getUtility());
+            }
+        });
     }
-}
