@@ -7,20 +7,18 @@ import edu.cwru.sepia.environment.model.state.State;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 
 public class MinimaxAlphaBeta extends Agent {
 
     private final int numPlys;
 
     private static final Comparator<GameStateChild> state_child_comptr = (c1, c2) -> {
-    	if (c1.state.getUtility() > c1.state.getUtility()) {
+    	if (c1.state.getUtility() > c2.state.getUtility()) {
     		return -1;
     	}
-        else if (c1.state.getUtility() < c1.state.getUtility()) {
+        else if (c2.state.getUtility() < c1.state.getUtility()) {
     		return 1;
     	}
         else {
@@ -94,9 +92,9 @@ public class MinimaxAlphaBeta extends Agent {
                 return child;
             }
         }
-        System.err.println("No matched value childern found");
-        System.exit(1);
-        return node;
+        // System.err.println("No matched value childern found");
+        // System.exit(1);
+        return childrens.get(0);
     }
 
 
@@ -137,7 +135,7 @@ public class MinimaxAlphaBeta extends Agent {
      *
      * Given a list of children you will order them according to heuristics you make up.
      * See the assignment description for suggestions on heuristics to use when sorting.
-     *  Both attack > one attack > no attack, we consulted online resources on this.
+     * Sort base on utility.
      * Use this function inside of your alphaBetaSearch method.
      *
      * Include a good comment about what your heuristics are and why you chose them.
@@ -146,39 +144,11 @@ public class MinimaxAlphaBeta extends Agent {
      * @return The list of children sorted by your heuristic.
      */
     public List<GameStateChild> orderChildrenWithHeuristics(List<GameStateChild> children) {
-        List<GameStateChild> attack_list = new LinkedList<GameStateChild>(children);
-        List<GameStateChild> move_list = new LinkedList<GameStateChild>(children);
-
-        // overwritten compare() method from comparator interface with shortcut.
-        // Collections.sort(orderedList, new Comparator<GameStateChild>() {
-        //     public int compare(GameStateChild child_a, GameStateChild child_b) {
-        //         return child_a.state.getUtility().compareTo(child_b.state.getUtility());
-        //     }
-        // });
-
-        boolean two_attackers_action_found = false;
-        for (GameStateChild c : children) {
-            int attacker_count = 0;
-
-        	for (Action a : c.action.values()) {
-        		if (a.getType().name().equals(GameState.ACTION_ATTACK_NAME)) {
-        			attacker_count++;
-        		}
-        	}
-
-        	if (attacker_count == 2) {
-        		attack_list.add(0, c);
-        	}
-            else if (attacker_count == 1)  {
-                attack_list.add(c);
-            }
-            else {
-        		move_list.add(c);
-        	}
+        List<GameStateChild> sorted_children = new ArrayList<>();
+        for (GameStateChild c : children){
+        	sorted_children.add(c);
         }
-
-        move_list.sort(state_child_comptr);
-        attack_list.addAll(move_list);
-        return attack_list;
+        sorted_children.sort(state_child_comptr);
+        return sorted_children;
     }
 }
