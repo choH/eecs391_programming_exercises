@@ -7,12 +7,26 @@ import edu.cwru.sepia.environment.model.state.State;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 public class MinimaxAlphaBeta extends Agent {
 
     private final int numPlys;
+
+    private static final Comparator<GameStateChild> state_child_comptr = (c1, c2) -> {
+    	if (c1.state.getUtility() > c1.state.getUtility()) {
+    		return -1;
+    	}
+        else if (c1.state.getUtility() < c1.state.getUtility()) {
+    		return 1;
+    	}
+        else {
+    		return 0;
+    	}
+    };
 
     public MinimaxAlphaBeta(int playernum, String[] args)
     {
@@ -72,56 +86,58 @@ public class MinimaxAlphaBeta extends Agent {
      * @param beta The current best value for the minimizing node from this node to the root
      * @return The best child of this node with updated values
      */
-    public GameStateChild alphaBetaSearch(GameStateChild node, int depth, double alpha, double beta)
-    {
-      if (depth == 0) {
-    	  return node;
-      }
+    public GameStateChild alphaBetaSearch(GameStateChild node, int depth, double alpha, double beta) {
+        double result_value = get_min_max_value(node, depth, alpha, beta, true);
+        List<GameStateChild> childrens = node.state.getChildren();
+        for (GameStateChild child : childrens) {
+            if (child.state.getUtility() == result_value) {
+                return child;
+            }
+        }
+        System.err.println("No matched value childern found");
+        System.exit(1);
+        return node;
+    }
 
-      GameState state = node.state;
-      List<GameStateChild> children = state.getChildren();
 
-      if (depth % 2 == 0) {
-    	  double max = Double.NEGATIVE_INFINITY;
-    	  GameStateChild maxChild = node;
-    	  for (GameStateChild c : children) {
-    		  GameStateChild child = alphaBetaSearch(c, depth - 1, alpha, beta);
-    		  double num = child.state.getUtility();
-    		  if (num > max) {
-    			  max = num;
-    			  maxChild = c;
-    		  }
-    		  alpha = Math.max(alpha, num);
-    		  if (beta <= alpha)
-    			  break;
-    	  }
-    	  return maxChild;
-      }
-      else {
-    	  double min = Double.POSITIVE_INFINITY;
-    	  GameStateChild minChild = node;
-    	  for(GameStateChild c : children) {
-    		  GameStateChild child = alphaBetaSearch(c, depth - 1, alpha, beta);
-    		  double num = child.state.getUtility();
-    		  if (num < min) {
-    			  min = num;
-    			  minChild = c;
-    		  }
-    		  beta = Math.min(beta, num);
-    		  if (beta <= alpha)
-    			  break;
-    	  }
-    	  return minChild;
-      }
+
+
+    private double get_min_max_value (GameStateChild node, int depth, double alpha, double beta, boolean max_flag){
+        if (depth <= 0) {
+            return node.state.getUtility();
+        }
+        double result_value = 0;
+        double max_value = Double.NEGATIVE_INFINITY;
+        double min_value = Double.POSITIVE_INFINITY;
+		for (GameStateChild child : orderChildrenWithHeuristics(node.state.getChildren())) {
+            if (max_flag) {
+                max_value = Math.max(max_value, get_min_max_value(child, depth - 1, alpha, beta, false));
+                if(max_value >= beta){
+        			return max_value;
+        		}
+        		alpha = Math.max(alpha, max_value);
+                result_value = max_value;
+            }
+            else {
+                min_value = Math.min(min_value, get_min_max_value(child, depth - 1, alpha, beta, true));
+                if(min_value <= alpha){
+    				return min_value;
+    			}
+    			beta = Math.min(min_value, beta);
+                result_value = min_value;
+            }
+    	}
+        return result_value;
 
     }
+
 
     /**
      * You will implement this.
      *
      * Given a list of children you will order them according to heuristics you make up.
      * See the assignment description for suggestions on heuristics to use when sorting.
-     *
+     *  Both attack > one attack > no attack, we consulted online resources on this.
      * Use this function inside of your alphaBetaSearch method.
      *
      * Include a good comment about what your heuristics are and why you chose them.
@@ -130,12 +146,39 @@ public class MinimaxAlphaBeta extends Agent {
      * @return The list of children sorted by your heuristic.
      */
     public List<GameStateChild> orderChildrenWithHeuristics(List<GameStateChild> children) {
-        List<GameStateChild> ordered_list = new LinkedList<GameStateChild>(children);
+        List<GameStateChild> attack_list = new LinkedList<GameStateChild>(children);
+        List<GameStateChild> move_list = new LinkedList<GameStateChild>(children);
 
         // overwritten compare() method from comparator interface with shortcut.
-        Collections.sort(orderedList, new Comparator<GameStateChild>() {
-            public int compare(GameStateChild child_a, GameStateChild child_b) {
-                return child_a.state.getUtility().compareTo(child_b.state.getUtility());
+        // Collections.sort(orderedList, new Comparator<GameStateChild>() {
+        //     public int compare(GameStateChild child_a, GameStateChild child_b) {
+        //         return child_a.state.getUtility().compareTo(child_b.state.getUtility());
+        //     }
+        // });
+
+        boolean two_attackers_action_found = false;
+        for (GameStateChild c : children) {
+            int attacker_count = 0;
+
+        	for (Action a : c.action.values()) {
+        		if (a.getType().name().equals(GameState.ACTION_ATTACK_NAME)) {
+        			attacker_count++;
+        		}
+        	}
+
+        	if (attacker_count == 2) {
+        		attack_list.add(0, c);
+        	}
+            else if (attacker_count == 1)  {
+                attack_list.add(c);
             }
-        });
+            else {
+        		move_list.add(c);
+        	}
+        }
+
+        move_list.sort(state_child_comptr);
+        attack_list.addAll(move_list);
+        return attack_list;
     }
+}
