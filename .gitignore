@@ -3,5 +3,6 @@
 PG*
 .DS_Store
 
-
-
+*_o.java
+*.py
+saves/*
