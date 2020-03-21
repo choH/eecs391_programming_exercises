@@ -27,13 +27,13 @@ import java.util.List;
  * you must be able to distinguish the townhall from a peasant. This can be done by getting
  * the name of the unit type from that unit's TemplateView:
  * state.getUnit(id).getTemplateView().getName().toLowerCase(): returns "townhall" or "peasant"
- * 
+ *
  * You will also need to distinguish between gold mines and trees.
  * state.getResourceNode(id).getType(): returns the type of the given resource
- * 
+ *
  * You can compare these types to values in the ResourceNode.Type enum:
  * ResourceNode.Type.GOLD_MINE and ResourceNode.Type.TREE
- * 
+ *
  * You can check how much of a resource is remaining with the following:
  * state.getResourceNode(id).getAmountRemaining()
  *
@@ -41,92 +41,93 @@ import java.util.List;
  * class/structure you use to represent actions.
  */
 public class GameState implements Comparable<GameState> {
-	
+
 	State.StateView state;
 	private int playernum;
 	private int xExtent;
 	private int yExtent;
 	private List<ResourceView> resourceNodes;
-	
+
 	private boolean buildPeasants;
-	
+
 	int[][] map, goldMap, woodMap;
-	
+
 	private List<UnitView> allUnits;
 	private List<UnitView> playerUnits = new ArrayList<UnitView>();
+    public List<Peasant> peasants = new LinkedList<Peasant>();
 	private UnitView townHall;
-	
+
 	private int requiredGold, requiredWood, currentGold, currentWood;
-	
+
 	private double heuristics;
 	private double cost;
-	
+
 
 	public State.StateView getState(){
 		return state;
 	}
-	
+
 	public int getPlayernum() {
 		return playernum;
 	}
-	
+
 	public int getXExtent() {
 		return xExtent;
 	}
-	
+
 	public int getYExtent() {
 		return yExtent;
 	}
-	
+
 	public List<ResourceView> getResourceNodes(){
 		return resourceNodes;
 	}
-	
+
 	public boolean isBuildPeasants(){
 		return buildPeasants;
 	}
-	
+
 	public int[][] getMap(){
 		return map;
 	}
-	
+
 	public int[][] getGoldMap(){
 		return goldMap;
 	}
-	
+
 	public int[][] getWoodMap(){
 		return woodMap;
 	}
-	
+
 	public List<UnitView> getAllUnits(){
 		return allUnits;
 	}
-	
+
 	public List<UnitView> getPlayerUnits(){
 		return playerUnits;
 	}
-	
+
 	public UnitView getTownHall() {
 		return townHall;
 	}
-	
+
 	public int getRequiredGold() {
 		return requiredGold;
 	}
-	
+
 	public int getRequiredWood() {
 		return requiredWood;
 	}
-	
+
 	public int getCurrentGold() {
 		return currentGold;
 	}
-	
+
 	public int getCurrentWood() {
 		return currentWood;
 	}
-	
-	
+
+
     /**
      * Construct a GameState from a stateview object. This is used to construct the initial search node. All other
      * nodes should be constructed from the another constructor you create or by factory functions that you create.
@@ -144,11 +145,11 @@ public class GameState implements Comparable<GameState> {
     	this.requiredGold = requiredGold;
     	this.requiredWood = requiredWood;
     	this.buildPeasants = buildPeasants;
-    	
+
     	this.xExtent = state.getXExtent();
     	this.yExtent = state.getYExtent();
     	this.resourceNodes = state.getAllResourceNodes();
-    	
+
     	map = new int[xExtent][yExtent];
     	goldMap = new int[xExtent][yExtent];
     	woodMap = new int[xExtent][yExtent];
@@ -159,7 +160,7 @@ public class GameState implements Comparable<GameState> {
     			woodMap[i][j] = 0;
     		}
     	}
-    	
+
     	for(ResourceView r : resourceNodes) {
     		map[r.getXPosition()][r.getYPosition()] = 1;
     		if (r.getType() == ResourceNode.Type.GOLD_MINE) {
@@ -169,7 +170,7 @@ public class GameState implements Comparable<GameState> {
     			woodMap[r.getXPosition()][r.getYPosition()] = r.getAmountRemaining();
     		}
     	}
-    	
+
     	allUnits = state.getAllUnits();
     	for(UnitView u : allUnits) {
     		if (u.getTemplateView().getName() == "peasant") {
@@ -179,12 +180,12 @@ public class GameState implements Comparable<GameState> {
     			this.townHall = u;
     		}
     	}
-    	
+
     	map[townHall.getXPosition()][townHall.getYPosition()] = -1;
-    	
+
     	this.currentGold = state.getResourceAmount(playernum, ResourceType.GOLD);
 		this.currentWood = state.getResourceAmount(playernum, ResourceType.WOOD);
-    	
+
     	this.heuristics = heuristic();
     	this.cost = getCost();
     }
@@ -203,8 +204,8 @@ public class GameState implements Comparable<GameState> {
     	}
         return false;
     }
-    
-    
+
+
 
     /**
      * The branching factor of this search graph are much higher than the planning. Generate all of the possible
@@ -231,7 +232,7 @@ public class GameState implements Comparable<GameState> {
     	int goldDiff = requiredGold - currentGold;
     	int woodDiff = requiredWood - currentWood;
     	result += goldDiff + woodDiff;
-    	
+
     	UnitView peasant = playerUnits.get(0);
     	if (peasant.getCargoAmount() > 0) {
     		result -= peasant.getCargoAmount();
@@ -242,11 +243,11 @@ public class GameState implements Comparable<GameState> {
     		result -= resource.getAmountRemaining();
     		result += Math.max(Math.abs(peasant.getXPosition()-resource.getXPosition()), peasant.getYPosition()-resource.getYPosition());
     	}
-    	
-    	
+
+
         return result;
     }
-    
+
     public ResourceView getOptimalResources(UnitView u) {
     	int min = 1000;
     	ResourceView result = resourceNodes.get(0);
@@ -257,7 +258,7 @@ public class GameState implements Comparable<GameState> {
     			result = r;
     		}
     	}
-    	
+
     	return result;
     }
 
@@ -328,4 +329,14 @@ public class GameState implements Comparable<GameState> {
         // TODO: Implement me!
         return 0;
     }
+
+
+    public Peasant get_action_peasant(Peasant tar_peasant) {
+		for (Peasant p : this.peasants){
+            if (p.equals(tar_peasant)){
+                return p;
+			}
+		}
+		return null;
+	}
 }
