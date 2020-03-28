@@ -1,1 +1,0 @@
-// Yet to be implement, I might need a townhall and goadmine class first as harvesting resource to cargo is very Position-related. 

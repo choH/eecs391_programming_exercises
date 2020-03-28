@@ -69,7 +69,7 @@ public class PlannerAgent extends Agent {
 
     @Override
     public void terminalStep(State.StateView stateView, History.HistoryView historyView) {
-
+        System.out.println("Successed.");
     }
 
     @Override
@@ -91,10 +91,47 @@ public class PlannerAgent extends Agent {
      * @return The plan or null if no plan is found.
      */
     private Stack<StripsAction> AstarSearch(GameState startState) {
-    	
-        // TODO: Implement me!
-        return null;
-    }
+
+ 		PriorityQueue<GameState> openlist = new PriorityQueue<GameState>();
+ 		Set<GameState> closedlist = new HashSet<GameState>();
+ 		openlist.add(startState);
+
+ 		while (!openlist.isEmpty()) {
+ 			GameState current = openlist.poll();
+ 			if (current.isGoal()) {
+ 				Stack<StripsAction> result = new Stack<StripsAction>();
+ 				GameState state = current;
+ 				List<StripsAction> list = state.getPlan();
+ 				while (!list.isEmpty()) {
+ 					result.push(list.remove(list.size()-1));
+ 				}
+ 				state = state.getParent();
+ 				Stack<StripsAction> resultPath = result;
+ 				return resultPath;
+ 			}
+ 			closedlist.add(current);
+ 			for (GameState n : current.generateChildren()) {
+ 				if (!closedlist.contains(n)) {
+ 					if (!ifLowerCost(openlist, n)) {
+ 						openlist.remove(n);
+ 					}
+ 					openlist.add(n);
+ 				}
+ 			}
+ 		}
+
+ 		return null;
+ 	}
+ 	private boolean ifLowerCost(PriorityQueue<GameState> openList,
+ 			GameState state) {
+ 		GameState[] array = openList.toArray(new GameState[] {});
+ 		for (GameState a : array) {
+ 			if (a.equals(state) && a.getCost() < state.getCost()) {
+ 				return true;
+ 			}
+ 		}
+ 		return false;
+ 	}
 
     /**
      * This has been provided for you. Each strips action is converted to a string with the toString method. This means
