@@ -20,3 +20,23 @@ Create new method getOptimalResources.
 
 #### Henry Zhong's Confusion
 * Nothing yet, but it seems heavy to understand all the provided helper methods. Also due to the `Peasant` class I created, I might have to refactor my `AstarAgent` from P3agents to a large degree.
+
+
+---
+
+### Week 2 Commit
+
+## Shiqi Li's Contribution
+* Designed `GameState` class
+* Refactored some `Actions` to be more modular, and with more getter/setter implemented.
+* Implemented agent to do the planning.
+
+## Henry Zhong's Contribution
+* Implemented `Actions` with a more polymorphism design.
+* Coupled `Actions` with `GameState`
+* Debugged some null pointer issues related to the polymorphism design.
+* Polished code.
+
+### Confusions
+* It seems like we spent a huge amount of time on building the custom actions (which involves a lot of interaction with the api), and debugging the copy constructor of `GameState`. I wish there can be a built in clone method on State as it is the basic for almost all AI agents.
+* The `hashCode()` method is for contains, but seems we can just call `equals()` and it is then trivial?
